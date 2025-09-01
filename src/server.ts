@@ -17,6 +17,7 @@ import authRouter from "./routes/authRoutes";
 import productRouter from "./routes/productRoutes";
 import orderRouter from "./routes/orderRoutes";
 import bookingRouter from "./routes/bookingRoutes";
+import contactRouter from "./routes/contactRoutes";
 
 // const SequelizeStore = connect(session.Store);
 // app.use(
@@ -49,6 +50,7 @@ app.use("/categories", categoryRouter);
 app.use("/products", productRouter);
 app.use("/orders", orderRouter);
 app.use("/bookings", bookingRouter);
+app.use("/contacts", contactRouter);
 
 app.use(errorHandler404);
 

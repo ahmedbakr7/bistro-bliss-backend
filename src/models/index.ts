@@ -4,6 +4,7 @@ import OrderDetails from "./orderDetail";
 import Product from "./product";
 import User from "./user";
 import Category from "./category";
+import Contact from "./contact";
 
 // User ↔ Order
 User.hasMany(Order, {
@@ -64,4 +65,4 @@ Product.belongsToMany(Order, {
     otherKey: "orderId",
 });
 
-export { User, Booking, Order, OrderDetails, Product, Category };
+export { User, Booking, Order, OrderDetails, Product, Category, Contact };
