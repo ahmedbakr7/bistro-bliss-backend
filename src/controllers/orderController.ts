@@ -11,7 +11,8 @@ import { OrderQuery } from "../validations/orderSchema";
 export const getAllOrders = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
         const { limit, page, sortBy, sortOrder, ...where } =
-            req.query as unknown as OrderQuery;
+            (req as any)
+            .validatedQuery as unknown as OrderQuery;
         const offset = (page - 1) * limit;
 
         // If nested under /users/:userId/orders propagate userId filter

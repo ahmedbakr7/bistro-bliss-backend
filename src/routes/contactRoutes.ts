@@ -23,7 +23,7 @@ router
     .route("/:contactId")
     .delete(
         buildValidator({ params: contactIdParamSchema }),
-        isOwnerOrAdmin,
+        // isOwnerOrAdmin,
         deleteContact
     );
 

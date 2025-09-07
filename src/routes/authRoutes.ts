@@ -16,6 +16,7 @@ import {
     sendResetPasswordSchema,
     verifyEmailSchema,
 } from "../validations/authSchema";
+import { makeUploader } from "../middlewares/multer"; // added uploader for image during register
 
 const router = Router();
 
@@ -30,7 +31,7 @@ const router = Router();
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register a new user (optionally with profile image)
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -38,12 +39,25 @@ const router = Router();
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/CreateUserInput'
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               email: { type: string }
+ *               password: { type: string }
+ *               phoneNumber: { type: string }
+ *               role: { type: string, enum: [user, admin] }
+ *               image: { type: string, format: binary, description: Optional profile image }
  *     responses:
  *       201: { description: User registered }
  */
-router
-    .route("/register")
-    .post(buildValidator({ body: createUserSchema }), register);
+router.route("/register").post(
+    // Accept multipart with optional image field "image". If JSON only, multer will no-op.
+    makeUploader({ folder: "users", fieldName: "image", required: false }),
+    buildValidator({ body: createUserSchema }),
+    register
+);
 
 /**
  * @swagger

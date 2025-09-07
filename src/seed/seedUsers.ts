@@ -1,6 +1,7 @@
 import { User } from "../models";
 
-async function seedUsers() {
+// Exportable seeding function (no process.exit so it can be used during server startup)
+export default async function seedUsers() {
     const usersData = [
         {
             name: "Alice Johnson",
@@ -35,10 +36,4 @@ async function seedUsers() {
     }
     console.log("User seed complete");
 }
-
-seedUsers()
-    .then(() => process.exit(0))
-    .catch((err) => {
-        console.error(err);
-        process.exit(1);
-    });
+// (Standalone execution removed to prevent process.exit during server start)

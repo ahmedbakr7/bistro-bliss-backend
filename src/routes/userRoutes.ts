@@ -16,7 +16,7 @@ import {
     userListQuerySchema,
 } from "../validations/userSchema";
 import { verifyJWT } from "../middlewares/verifyJWT";
-import uploader from "../middlewares/multer";
+import uploader, { makeUploader } from "../middlewares/multer"; // new factory
 import productRouter from "./productRoutes";
 import orderRouter from "./orderRoutes";
 import bookingRouter from "./bookingRoutes";
@@ -180,9 +180,15 @@ router
 router.post(
     "/:userId/upload",
     buildValidator({ params: userIdParamSchema }),
-    // verifyJWT,
-    // isOwnerOrAdmin,
-    uploader.single("image"),
+    verifyJWT,
+    isOwnerOrAdmin,
+    // Use specific uploader instance (could customize limits if desired)
+    makeUploader({
+        folder: "users",
+        fieldName: "image",
+        maxFileSizeMB: 2,
+        required: true,
+    }),
     fileUpload
 );
 

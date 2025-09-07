@@ -5,6 +5,10 @@ import { ServiceError } from "../util/common/common";
 import { UserQuery, imageUrl } from "../validations/userSchema";
 import { SourceTextModule } from "vm";
 import { StatusCodes } from "http-status-codes";
+import path from "path";
+import fs from "fs";
+import { buildPublicUrl, safeUnlink } from "../middlewares/multer";
+import sequelize from "../util/database";
 
 // @desc    Fetch all users
 // @route   GET /users
@@ -21,7 +25,7 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
         limit: number;
         sortBy: string;
         sortOrder: string;
-    } = req.query as unknown as UserQuery;
+    } = (req as any).validatedQuery as unknown as UserQuery;
 
     const offset = (page - 1) * limit;
 
@@ -182,17 +186,25 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const fileUpload = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.file)
+    // New approach: rely on (req as any).uploadedFileRelativePath provided by uploader factory
+    if (!req.file || !(req as any).uploadedFileRelativePath) {
         throw new ServiceError("No file uploaded", 400, "users:fileUpload");
+    }
+
     const user = await User.findByPk(req.params.userId);
     if (!user) {
+        // cleanup the just-uploaded file if user not found
+        await safeUnlink((req as any).uploadedFileRelativePath);
         throw new ServiceError("User not found", 404, "users:fileUpload");
     }
-    user.imageUrl = req.file.filename;
+
+    // Store full relative path (e.g. users/filename) so we can resolve actual location later
+    user.imageUrl = (req as any).uploadedFileRelativePath.replace(/\\/g, "/");
     await user.save();
+
     res.status(200).json({
-        message: `Image Uploaded!`,
-        imageUrl: user.imageUrl,
+        message: "Image uploaded",
+        imageUrl: buildPublicUrl(user.imageUrl),
     });
 });
 
@@ -204,13 +216,25 @@ export const fileDownload = asyncHandler(
         }
 
         const user = await User.findByPk(id);
-        if ((req as any).user !== user?.name)
+        if (!user) {
+            throw new ServiceError("User not found", 404, "users:fileDownload");
+        }
+
+        if (!user.imageUrl) {
             throw new ServiceError(
-                "Unauthorized - wrong user id",
-                401,
+                "User has no image",
+                404,
                 "users:fileDownload"
             );
+        }
 
-        res.download(`../../uploads/${user?.imageUrl}`);
+        const absPath = path.join(process.cwd(), "uploads", user.imageUrl);
+        fs.access(absPath, fs.constants.R_OK, (err) => {
+            if (err) {
+                res.status(404).json({ message: "Image file not found" });
+            } else {
+                res.download(absPath);
+            }
+        });
     }
 );

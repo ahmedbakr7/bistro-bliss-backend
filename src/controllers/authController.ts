@@ -11,6 +11,7 @@ import crypto from "crypto";
 import { sendMail } from "../util/nodemailer";
 import { buildVerificationEmail } from "../util/emailTemplates";
 import { create } from "domain";
+import { safeUnlink } from "../middlewares/multer"; // added for cleanup of uploaded image on failure
 
 const ACCESS_TOKEN_EXPIRES = "15m"; // Unchanged semantics (Reason: explicit constant)
 const REFRESH_TOKEN_EXPIRES = "7d"; // Extended to 7d (Reason: typical longer-lived refresh vs access token)
@@ -75,11 +76,20 @@ function refreshCookieOptions() {
     };
 }
 
-// @desc    User registration
+// @desc    User registration (now supports optional multipart form with image upload)
 // @route   POST /auth/register
 // @access  Public
 export const register = asyncHandler(async (req: Request, res: Response) => {
     const payload = (req.body.user as User) || req.body;
+
+    // If an image file was uploaded by multer factory (makeUploader), attach its relative path (e.g. users/filename)
+    if (req.file && (req as any).uploadedFileRelativePath) {
+        payload.imageUrl = (req as any).uploadedFileRelativePath.replace(
+            /\\/g,
+            "/"
+        );
+    }
+
     try {
         const created = await User.create({ ...payload });
         // Use short numeric code for user-friendly email + separate longer hex token if needed
@@ -104,6 +114,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
         res.status(201).json(created);
     } catch (err: any) {
+        // If we already stored a file for this (failed) registration, remove it to avoid orphan files
+        await safeUnlink((req as any).uploadedFileRelativePath);
         // Default
         let status = StatusCodes.BAD_REQUEST;
         let message = "Failed to create user";

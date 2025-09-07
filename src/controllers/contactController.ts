@@ -25,7 +25,7 @@ export const listContacts = asyncHandler(
             sortBy = "createdAt",
             sortOrder = "DESC",
             ...where
-        } = req.query as any;
+        } = (req as any).validatedQuery as any;
         const offset = (page - 1) * limit;
 
         const { rows, count } = await Contact.findAndCountAll({

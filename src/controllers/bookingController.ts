@@ -8,7 +8,8 @@ import { StatusCodes } from "http-status-codes";
 export const getAllBookings = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
         const { limit, page, sortBy, sortOrder, ...where } =
-            req.query as unknown as BookingQuery;
+            (req as any)
+            .validatedQuery as unknown as BookingQuery;
         const offset = (page - 1) * limit;
 
         (where as any).userId = req.params.userId || undefined;

@@ -8,8 +8,8 @@ import { CategoryQuery } from "../validations/categorySchema";
 // GET /categories
 export const getAllCategories = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-        const { limit, page, sortBy, sortOrder, ...where } =
-            req.query as unknown as CategoryQuery;
+        const { limit, page, sortBy, sortOrder, ...where } = (req as any)
+            .validatedQuery as unknown as CategoryQuery;
         const offset = (page - 1) * limit;
 
         const { rows, count } = await Category.findAndCountAll({

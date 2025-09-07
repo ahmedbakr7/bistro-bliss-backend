@@ -7,11 +7,11 @@ import { ProductQuery } from "../validations/productSchema";
 
 export const getAllProducts = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { limit, page, sortBy, sortOrder, ...where } =
-            req.query as unknown as ProductQuery;
+        const { limit, page, sortBy, sortOrder, ...where } = (req as any)
+            .validatedQuery as unknown as ProductQuery;
         const offset = (page - 1) * limit;
 
-        (where as any).userId = req.params.userId || undefined;
+        // (where as any).userId = req.params.userId || undefined;
 
         const { rows, count } = await Product.findAndCountAll({
             where,
