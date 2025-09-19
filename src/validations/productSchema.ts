@@ -5,9 +5,10 @@ export type ProductQuery = {
     description?: string;
     imageUrl?: string;
     price?: number;
+    category?: string;
     limit: number;
     page: number;
-    sortBy: "name" | "price" | "createdAt";
+    sortBy: "name" | "price" | "createdAt" | "category";
     sortOrder: "asc" | "desc";
 };
 
@@ -20,6 +21,8 @@ const price = Joi.number().positive();
 export const imageUrl = Joi.string().uri().trim().messages({
     "string.uri": "imageUrl must be a valid URI",
 });
+
+const category = Joi.string().max(100).trim();
 
 export const productIdParamSchema = Joi.object({
     productId: Joi.string()
@@ -34,6 +37,7 @@ export const createProductSchema = Joi.object({
     description: description.required(),
     price: price.required(),
     imageUrl: imageUrl.optional(),
+    category: category.optional(),
 }).options({
     abortEarly: false,
     allowUnknown: false,
@@ -45,6 +49,7 @@ export const updateProductSchema = Joi.object({
     description: description.optional(),
     price: price.optional(),
     imageUrl: imageUrl.optional(),
+    category: category.optional(),
 })
     .min(1)
     .options({
@@ -58,11 +63,12 @@ export const productQuerySchema = Joi.object({
     description: description.optional(),
     imageUrl: name.optional(),
     price: name.optional(),
+    category: category.optional(),
     limit: Joi.number().integer().positive().min(1).max(100).default(10),
     page: Joi.number().integer().positive().min(1).default(1),
     sortBy: Joi.string()
         .trim()
-        .valid("name", "price", "createdAt")
+        .valid("name", "price", "createdAt", "category")
         .default("createdAt"),
     sortOrder: Joi.string()
         .trim()

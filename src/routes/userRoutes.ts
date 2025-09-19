@@ -22,6 +22,8 @@ import orderRouter from "./orderRoutes";
 import bookingRouter from "./bookingRoutes";
 import isOwnerOrAdmin from "../middlewares/isOwnerOrAdmin";
 import { loadUserByParam } from "../middlewares/loadUser";
+import cartRouter from "./cartRoutes";
+import favouritesRouter from "./favouritesRoutes";
 
 const router = Router();
 
@@ -236,6 +238,18 @@ router.use(
     buildValidator({ params: userIdParamSchema }),
     loadUserByParam,
     bookingRouter
+);
+router.use(
+    "/:userId/cart",
+    buildValidator({ params: userIdParamSchema }),
+    loadUserByParam,
+    cartRouter
+);
+router.use(
+    "/:userId/favourites",
+    buildValidator({ params: userIdParamSchema }),
+    loadUserByParam,
+    favouritesRouter
 );
 
 export default router;

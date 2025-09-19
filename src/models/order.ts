@@ -26,6 +26,7 @@ import sequelize from "../util/database";
 
 export type OrderStatus =
     | "CANCELED"
+    | "FAVOURITES"
     | "DRAFT"
     | "CREATED"
     | "PREPARING"
@@ -62,6 +63,7 @@ Order.init(
         status: {
             type: DataTypes.ENUM(
                 "CANCELED",
+                "FAVOURITES",
                 "DRAFT",
                 "CREATED",
                 "PREPARING",
@@ -99,7 +101,34 @@ Order.init(
         underscored: true,
         paranoid: true,
         timestamps: true,
+        // Added index for faster status lookups per user (implements part of suggestion #3)
+        indexes: [
+            { name: "orders_user_status_idx", fields: ["user_id", "status"] },
+        ],
     }
 );
+
+// Helper static methods to ensure single cart / favourites per user
+(Order as any).getOrCreateCart = async function (userId: string, t?: any) {
+    const existing = await Order.findOne({
+        where: { userId, status: "DRAFT" },
+        transaction: t,
+    });
+    if (existing) return existing;
+    return Order.create({ userId, status: "DRAFT" } as any, { transaction: t });
+};
+(Order as any).getOrCreateFavourites = async function (
+    userId: string,
+    t?: any
+) {
+    const existing = await Order.findOne({
+        where: { userId, status: "FAVOURITES" },
+        transaction: t,
+    });
+    if (existing) return existing;
+    return Order.create({ userId, status: "FAVOURITES" } as any, {
+        transaction: t,
+    });
+};
 
 export default Order;

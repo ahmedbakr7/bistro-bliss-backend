@@ -42,14 +42,7 @@ Product.hasMany(OrderDetails, {
 });
 OrderDetails.belongsTo(Product, { as: "product", foreignKey: "productId" });
 
-// Category ↔ Product
-Category.hasMany(Product, {
-    as: "products",
-    foreignKey: "categoryId",
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
-});
-Product.belongsTo(Category, { as: "category", foreignKey: "categoryId" });
+// Removed Category ↔ Product association; Product now stores a plain `category` string
 
 // Convenience many-to-many: Order ↔ Product through OrderDetails (line items)
 Order.belongsToMany(Product, {

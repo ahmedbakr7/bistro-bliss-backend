@@ -23,7 +23,7 @@ async function seedAll() {
             import("./seed/seedMenuImageProducts"), // corrected path
         ]);
         await seedUsers();
-        // await seedProducts();
+        await seedProducts();
         await seedContacts();
         await seedMenuImageProducts();
         // await seedBookings();

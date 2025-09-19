@@ -11,13 +11,11 @@ export const getAllProducts = asyncHandler(
             .validatedQuery as unknown as ProductQuery;
         const offset = (page - 1) * limit;
 
-        // (where as any).userId = req.params.userId || undefined;
-
         const { rows, count } = await Product.findAndCountAll({
             where,
             limit,
             offset,
-            order: [[sortBy, sortOrder]],
+            order: [[sortBy as any, sortOrder as any]],
         });
 
         res.json({

@@ -81,6 +81,10 @@ const swaggerDefinition = {
                     description: { type: "string" },
                     price: { type: "number" },
                     imageUrl: { type: "string" },
+                    category: {
+                        type: "string",
+                        description: "Product category label",
+                    },
                 },
             },
             UpdateProductInput: {
@@ -90,6 +94,10 @@ const swaggerDefinition = {
                     description: { type: "string" },
                     price: { type: "number" },
                     imageUrl: { type: "string" },
+                    category: {
+                        type: "string",
+                        description: "Product category label",
+                    },
                 },
             },
             // Order schemas

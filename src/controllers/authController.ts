@@ -12,6 +12,7 @@ import { sendMail } from "../util/nodemailer";
 import { buildVerificationEmail } from "../util/emailTemplates";
 import { create } from "domain";
 import { safeUnlink } from "../middlewares/multer"; // added for cleanup of uploaded image on failure
+import { Order, OrderDetails } from "../models"; // added for cart & favourites retrieval
 
 const ACCESS_TOKEN_EXPIRES = "15m"; // Unchanged semantics (Reason: explicit constant)
 const REFRESH_TOKEN_EXPIRES = "7d"; // Extended to 7d (Reason: typical longer-lived refresh vs access token)
@@ -200,9 +201,33 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
     res.cookie(COOKIE_NAME, refreshToken, refreshCookieOptions());
 
+    // Fetch / ensure cart & favourites plus their line items
+    let cart: any = null;
+    let favourites: any = null;
+    try {
+        cart = await (Order as any).getOrCreateCart(user.id);
+        favourites = await (Order as any).getOrCreateFavourites(user.id);
+    } catch (e) {
+        // Non-fatal: proceed without cart/favourites if creation failed
+        console.error("Failed to ensure cart/favourites for user", user.id, e);
+    }
+
+    const [cartItems, favouriteItems] = await Promise.all([
+        cart
+            ? OrderDetails.findAll({ where: { orderId: cart.id } as any })
+            : Promise.resolve([]),
+        favourites
+            ? OrderDetails.findAll({ where: { orderId: favourites.id } as any })
+            : Promise.resolve([]),
+    ]);
+
     res.json({
         accessToken,
         user: { id: user.id, name: user.name, role: user.role },
+        cart: cart ? { id: cart.id, items: cartItems } : null,
+        favourites: favourites
+            ? { id: favourites.id, items: favouriteItems }
+            : null,
     });
 });
 

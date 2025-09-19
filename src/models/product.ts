@@ -36,6 +36,7 @@ class Product extends Model<
     declare description: CreationOptional<string | null>;
     declare imageUrl: CreationOptional<string | null>;
     declare price: number;
+    declare category: CreationOptional<string | null>; // new plain string category
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
     declare deletedAt: CreationOptional<Date>;
@@ -63,6 +64,10 @@ Product.init(
         imageUrl: {
             type: DataTypes.STRING,
             allowNull: true,
+        },
+        category: {
+            type: DataTypes.STRING,
+            allowNull: true, // keep optional to avoid breaking existing rows
         },
         createdAt: DataTypes.DATE,
         updatedAt: DataTypes.DATE,
