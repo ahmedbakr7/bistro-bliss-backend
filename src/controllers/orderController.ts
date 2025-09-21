@@ -1,28 +1,48 @@
 import { NextFunction, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { Order, User } from "../models";
+import { Order, User, OrderDetails, Product } from "../models";
 import { ServiceError } from "../util/common/common";
 import { StatusCodes } from "http-status-codes";
 import { OrderQuery } from "../validations/orderSchema";
+import { Op } from "sequelize";
 
 // @desc    Fetch all orders (optionally filtered by userId when mounted under /users/:userId/orders)
 // @route   GET /orders  OR  GET /users/:userId/orders
 // @access  Private (adjust via route middleware)
 export const getAllOrders = asyncHandler(
     async (req: Request, res: Response, _next: NextFunction) => {
-        const { limit, page, sortBy, sortOrder, ...where } =
-            (req as any)
-            .validatedQuery as unknown as OrderQuery;
+        const {
+            limit,
+            page,
+            sortBy,
+            sortOrder,
+            includeOrderDetails,
+            ...where
+        } = (req as any).validatedQuery as unknown as OrderQuery;
         const offset = (page - 1) * limit;
 
         // If nested under /users/:userId/orders propagate userId filter
-        (where as any).userId = req.params.userId || undefined;
+        if (req.params.userId)
+            (where as any).userId = req.params.userId || undefined;
+
+        // Exclude DRAFT and FAVOURITES statuses
+        (where as any).status = { [Op.notIn]: ["DRAFT", "FAVOURITES"] };
 
         const { rows, count } = await Order.findAndCountAll({
             where,
             limit,
             offset,
             order: [[sortBy, sortOrder]],
+            include:
+                includeOrderDetails !== false
+                    ? [
+                          {
+                              model: OrderDetails,
+                              as: "orderDetails",
+                              include: [{ model: Product, as: "product" }],
+                          },
+                      ]
+                    : [],
         });
 
         res.json({
@@ -43,7 +63,16 @@ export const getAllOrders = asyncHandler(
 export const getOrderById = asyncHandler(
     async (req: Request, res: Response) => {
         const id = req.params.orderId;
-        const order = await Order.findByPk(id);
+        const { includeOrderDetails = true } =
+            ((req as any).validatedQuery as {
+                includeOrderDetails?: boolean;
+            }) || {};
+
+        const order = await Order.findByPk(id, {
+            include: includeOrderDetails
+                ? [{ model: OrderDetails, as: "orderDetails" }]
+                : [],
+        });
         if (!order) {
             throw new ServiceError("Order not found", 404, "orders:getById");
         }

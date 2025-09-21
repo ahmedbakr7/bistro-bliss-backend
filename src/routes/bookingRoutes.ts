@@ -74,7 +74,6 @@ router
     .get(buildValidator({ query: BookingQuerySchema }), getAllBookings)
     .post(
         verifyJWT,
-        isOwnerOrAdmin,
         buildValidator({ body: createBookingSchema }),
         createBooking
     );
@@ -129,8 +128,8 @@ router
     .all(buildValidator({ params: bookingIdParamSchema }))
     .get(getBookingById)
     .patch(
-        verifyJWT,
-        isOwnerOrAdmin,
+        // verifyJWT,
+        // isOwnerOrAdmin,
         buildValidator({ body: updateBookingSchema }),
         updateBooking
     )

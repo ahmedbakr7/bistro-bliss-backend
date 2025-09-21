@@ -223,7 +223,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
     res.json({
         accessToken,
-        user: { id: user.id, name: user.name, role: user.role },
+        user,
         cart: cart ? { id: cart.id, items: cartItems } : null,
         favourites: favourites
             ? { id: favourites.id, items: favouriteItems }

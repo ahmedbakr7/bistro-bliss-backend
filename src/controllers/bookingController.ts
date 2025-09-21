@@ -2,17 +2,17 @@ import { NextFunction, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Booking, User } from "../models";
 import { ServiceError } from "../util/common/common";
-import { BookingQuery } from "../validations/bookingSchema";
+import { BookingQuery, userId } from "../validations/bookingSchema";
 import { StatusCodes } from "http-status-codes";
 
 export const getAllBookings = asyncHandler(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { limit, page, sortBy, sortOrder, ...where } =
-            (req as any)
+        const { limit, page, sortBy, sortOrder, ...where } = (req as any)
             .validatedQuery as unknown as BookingQuery;
         const offset = (page - 1) * limit;
 
-        (where as any).userId = req.params.userId || undefined;
+        if (req.params.userId)
+            (where as any).userId = req.params.userId || undefined;
 
         const { rows, count } = await Booking.findAndCountAll({
             where,

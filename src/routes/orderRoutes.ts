@@ -8,6 +8,7 @@ import {
     orderIdParamSchema,
     orderQuerySchema,
     updateOrderSchema,
+    orderIncludeQuerySchema,
 } from "../validations/orderSchema";
 import {
     createOrder,
@@ -17,7 +18,7 @@ import {
     updateOrder,
 } from "../controllers/orderController";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 /**
  * @swagger
@@ -120,10 +121,10 @@ router
 router
     .route("/:orderId")
     .all(buildValidator({ params: orderIdParamSchema }))
-    .get(getOrderById)
+    .get(buildValidator({ query: orderIncludeQuerySchema }), getOrderById)
     .patch(
-        verifyJWT,
-        isOwnerOrAdmin,
+        // verifyJWT,
+        // isOwnerOrAdmin,
         buildValidator({ body: updateOrderSchema }),
         updateOrder
     )

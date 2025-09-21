@@ -14,10 +14,16 @@ export type OrderQuery = {
         | "deliveredAt"
         | "receivedAt";
     sortOrder: "asc" | "desc";
+    includeOrderDetails?: boolean;
+};
+
+export type OrderIncludeQuery = {
+    includeOrderDetails: boolean;
 };
 
 const status = Joi.string()
     .trim()
+    .uppercase()
     .valid(
         "CANCELED",
         "DRAFT",
@@ -27,7 +33,6 @@ const status = Joi.string()
         "DELIVERING",
         "RECEIVED"
     )
-    .default("DRAFT");
 
 const date = Joi.date().iso();
 
@@ -67,6 +72,13 @@ export const updateOrderSchema = Joi.object({
         stripUnknown: true,
     });
 
+const includeOrderDetails = Joi.boolean()
+    .truthy("true")
+    .truthy("1")
+    .falsy("false")
+    .falsy("0")
+    .default(true);
+
 export const orderQuerySchema = Joi.object({
     status: status.optional(),
     userId: uuidV4.optional(),
@@ -88,6 +100,15 @@ export const orderQuerySchema = Joi.object({
         .lowercase()
         .valid("asc", "desc")
         .default("asc"),
+    includeOrderDetails,
+}).options({
+    abortEarly: false,
+    allowUnknown: false,
+    stripUnknown: true,
+});
+
+export const orderIncludeQuerySchema = Joi.object({
+    includeOrderDetails,
 }).options({
     abortEarly: false,
     allowUnknown: false,
