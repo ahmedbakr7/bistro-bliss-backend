@@ -24,6 +24,7 @@ import isOwnerOrAdmin from "../middlewares/isOwnerOrAdmin";
 import { loadUserByParam } from "../middlewares/loadUser";
 import cartRouter from "./cartRoutes";
 import favouritesRouter from "./favouritesRoutes";
+import notificationRouter from "./notificationRoutes";
 
 const router = Router();
 
@@ -250,6 +251,12 @@ router.use(
     buildValidator({ params: userIdParamSchema }),
     loadUserByParam,
     favouritesRouter
+);
+router.use(
+    "/:userId/notifications",
+    buildValidator({ params: userIdParamSchema }),
+    loadUserByParam,
+    notificationRouter
 );
 
 export default router;

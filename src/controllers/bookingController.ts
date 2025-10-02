@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { Booking, User } from "../models";
+import { Booking, User, Notification } from "../models";
 import { ServiceError } from "../util/common/common";
 import { BookingQuery, userId } from "../validations/bookingSchema";
 import { StatusCodes } from "http-status-codes";
@@ -66,6 +66,16 @@ export const createBooking = asyncHandler(
         }
 
         const newBooking = await user.createBooking(booking);
+
+        // Notification: staff/admin about new reservation
+        await Notification.create({
+            userId: null, // system / broadcast (future filtering)
+            type: "NEW_RESERVATION",
+            message: `User ${user.name} booked a table for ${
+                newBooking.numberOfPeople
+            } on ${new Date(newBooking.bookedAt).toLocaleString()}`,
+        } as any);
+
         res.status(StatusCodes.CREATED).json({ booking: newBooking });
         return;
     }
@@ -90,8 +100,23 @@ export const updateBooking = asyncHandler(
             throw new ServiceError("booking not found", 404, "bookings:update");
         }
 
+        const previousStatus = booking.status;
         const data = req.body.booking ?? req.body; // allow either structure
         const updated = await booking.update(data);
+
+        // If status transitioned to CONFIRMED, notify customer
+        if (previousStatus !== "CONFIRMED" && updated.status === "CONFIRMED") {
+            await Notification.create({
+                userId: updated.userId,
+                type: "RESERVATION_CONFIRMED",
+                message: `Your reservation for ${
+                    updated.numberOfPeople
+                } on ${new Date(
+                    updated.bookedAt
+                ).toLocaleString()} is confirmed.`,
+            } as any);
+        }
+
         res.json(updated);
     }
 );

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { Order, User, OrderDetails, Product } from "../models";
+import { Order, User, OrderDetails, Product, Notification } from "../models";
 import { ServiceError } from "../util/common/common";
 import { StatusCodes } from "http-status-codes";
 import { OrderQuery } from "../validations/orderSchema";
@@ -98,6 +98,13 @@ export const createOrder = asyncHandler(
         // Ensure we do not let clients override protected fields
         const newOrder = await (user as any).createOrder({ ...payload });
 
+        // Notification: staff/admin new order
+        await Notification.create({
+            userId: null, // broadcast / system
+            type: "NEW_ORDER",
+            message: `User ${user.name} placed a new order (${newOrder.id}).`,
+        } as any);
+
         res.status(StatusCodes.CREATED).json({ order: newOrder });
     }
 );
@@ -116,8 +123,19 @@ export const updateOrder = asyncHandler(async (req: Request, res: Response) => {
         throw new ServiceError("Order not found", 404, "orders:update");
     }
 
+    const previousStatus = order.status;
     const data = (req.body.order ?? req.body) as Partial<Order>;
     const updated = await order.update(data);
+
+    // If moved to READY notify customer
+    if (previousStatus !== "READY" && updated.status === "READY") {
+        await Notification.create({
+            userId: updated.userId,
+            type: "ORDER_READY",
+            message: `Your order ${updated.id} is ready for pickup/delivery.`,
+        } as any);
+    }
+
     res.json(updated);
 });
 

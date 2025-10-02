@@ -5,6 +5,7 @@ import Product from "./product";
 import User from "./user";
 import Category from "./category";
 import Contact from "./contact";
+import Notification from "./notification";
 
 // User ↔ Order
 User.hasMany(Order, {
@@ -23,6 +24,15 @@ User.hasMany(Booking, {
     onUpdate: "CASCADE",
 });
 Booking.belongsTo(User, { as: "user", foreignKey: "userId" });
+
+// User ↔ Notification
+User.hasMany(Notification, {
+    as: "notifications",
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+});
+Notification.belongsTo(User, { as: "user", foreignKey: "userId" });
 
 // Order ↔ OrderDetails (line items)
 Order.hasMany(OrderDetails, {
@@ -58,4 +68,13 @@ Product.belongsToMany(Order, {
     otherKey: "orderId",
 });
 
-export { User, Booking, Order, OrderDetails, Product, Category, Contact };
+export {
+    User,
+    Booking,
+    Order,
+    OrderDetails,
+    Product,
+    Category,
+    Contact,
+    Notification,
+};
