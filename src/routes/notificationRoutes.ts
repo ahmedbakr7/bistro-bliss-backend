@@ -15,6 +15,7 @@ import {
     getNotificationById,
     markAsRead,
     updateNotification,
+    markAllAsRead,
 } from "../controllers/notificationController";
 
 const router = Router({ mergeParams: true });
@@ -86,6 +87,9 @@ router
         buildValidator({ body: createNotificationSchema }),
         createNotification
     );
+
+// mark all as read for a user (mounted at /users/:userId/notifications)
+router.patch("/read-all", verifyJWT, isOwnerOrAdmin, markAllAsRead);
 
 /**
  * @swagger

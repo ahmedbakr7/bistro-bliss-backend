@@ -119,3 +119,33 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
     await existing.update({ readAt: new Date() });
     res.json(existing);
 });
+
+// Mark all notifications for a user as read
+export const markAllAsRead = asyncHandler(
+    async (req: Request, res: Response) => {
+        const userId = req.params.userId;
+        if (!userId) {
+            throw new ServiceError(
+                "userId param required",
+                400,
+                "notifications:markAllAsRead"
+            );
+        }
+
+        const now = new Date();
+        const [updatedCount] = await Notification.update(
+            { readAt: now },
+            {
+                where: {
+                    userId,
+                    readAt: { [Op.is]: null },
+                },
+            }
+        );
+
+        res.json({
+            message: `Marked ${updatedCount} notifications as read`,
+            updated: updatedCount,
+        });
+    }
+);

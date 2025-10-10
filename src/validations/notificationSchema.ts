@@ -4,7 +4,10 @@ export type NotificationType =
     | "RESERVATION_CONFIRMED"
     | "ORDER_READY"
     | "NEW_RESERVATION"
-    | "NEW_ORDER";
+    | "NEW_ORDER"
+    | "ORDER_ACCEPTED"
+    | "ORDER_OUT_FOR_DELIVERY"
+    | "ORDER_DELIVERED";
 
 export type NotificationQuery = {
     page: number;
@@ -27,7 +30,10 @@ const type = Joi.string()
         "RESERVATION_CONFIRMED",
         "ORDER_READY",
         "NEW_RESERVATION",
-        "NEW_ORDER"
+        "NEW_ORDER",
+        "ORDER_ACCEPTED",
+        "ORDER_OUT_FOR_DELIVERY",
+        "ORDER_DELIVERED"
     )
     .messages({ any: "Invalid notification type" });
 

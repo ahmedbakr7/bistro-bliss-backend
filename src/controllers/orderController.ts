@@ -125,15 +125,70 @@ export const updateOrder = asyncHandler(async (req: Request, res: Response) => {
 
     const previousStatus = order.status;
     const data = (req.body.order ?? req.body) as Partial<Order>;
+
+    // Auto-set timestamps for certain transitions if not provided
+    const now = new Date();
+    if (!order.acceptedAt && (data.acceptedAt || data.status === "PREPARING")) {
+        (data as any).acceptedAt = (data as any).acceptedAt ?? (now as any);
+    }
+    if (
+        !order.deliveredAt &&
+        (data.deliveredAt || data.status === "RECEIVED")
+    ) {
+        (data as any).deliveredAt = (data as any).deliveredAt ?? (now as any);
+    }
+
     const updated = await order.update(data);
 
-    // If moved to READY notify customer
-    if (previousStatus !== "READY" && updated.status === "READY") {
-        await Notification.create({
-            userId: updated.userId,
-            type: "ORDER_READY",
-            message: `Your order ${updated.id} is ready for pickup/delivery.`,
-        } as any);
+    // Notifications on state changes
+    try {
+        // Accepted: when acceptedAt set or status moved to PREPARING from earlier states
+        if (
+            (!order.acceptedAt && !!updated.acceptedAt) ||
+            (previousStatus !== "PREPARING" && updated.status === "PREPARING")
+        ) {
+            await Notification.create({
+                userId: updated.userId,
+                type: "ORDER_ACCEPTED",
+                message: `Your order ${updated.id} has been accepted and is being prepared.`,
+            } as any);
+        }
+
+        // Out for delivery: when status becomes DELIVERING
+        if (
+            previousStatus !== "DELIVERING" &&
+            updated.status === "DELIVERING"
+        ) {
+            await Notification.create({
+                userId: updated.userId,
+                type: "ORDER_OUT_FOR_DELIVERY",
+                message: `Your order ${updated.id} is out for delivery.`,
+            } as any);
+        }
+
+        // Delivered: when deliveredAt set or status becomes RECEIVED
+        if (
+            (!order.deliveredAt && !!updated.deliveredAt) ||
+            (previousStatus !== "RECEIVED" && updated.status === "RECEIVED")
+        ) {
+            await Notification.create({
+                userId: updated.userId,
+                type: "ORDER_DELIVERED",
+                message: `Your order ${updated.id} has been delivered. Enjoy your meal!`,
+            } as any);
+        }
+
+        // Existing logic for READY retained
+        if (previousStatus !== "READY" && updated.status === "READY") {
+            await Notification.create({
+                userId: updated.userId,
+                type: "ORDER_READY",
+                message: `Your order ${updated.id} is ready for pickup/delivery.`,
+            } as any);
+        }
+    } catch (err) {
+        // don't block the response due to notification failure
+        // TODO: log error
     }
 
     res.json(updated);

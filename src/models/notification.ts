@@ -15,7 +15,10 @@ export type NotificationType =
     | "RESERVATION_CONFIRMED"
     | "ORDER_READY"
     | "NEW_RESERVATION"
-    | "NEW_ORDER";
+    | "NEW_ORDER"
+    | "ORDER_ACCEPTED"
+    | "ORDER_OUT_FOR_DELIVERY"
+    | "ORDER_DELIVERED";
 
 class Notification extends Model<
     InferAttributes<Notification>,
@@ -45,7 +48,10 @@ Notification.init(
                 "RESERVATION_CONFIRMED",
                 "ORDER_READY",
                 "NEW_RESERVATION",
-                "NEW_ORDER"
+                "NEW_ORDER",
+                "ORDER_ACCEPTED",
+                "ORDER_OUT_FOR_DELIVERY",
+                "ORDER_DELIVERED"
             ),
             allowNull: false,
         },
