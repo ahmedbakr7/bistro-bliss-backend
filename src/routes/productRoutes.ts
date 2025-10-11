@@ -9,6 +9,7 @@ import {
 import buildValidator from "../middlewares/validation";
 import {
     createProductSchema,
+    productIdParamSchema,
     productQuerySchema,
     updateProductSchema,
 } from "../validations/productSchema";
@@ -129,20 +130,20 @@ router
     .route("/:productId")
     .get(
         cache((req) => `product:${req.params.productId}`, 120),
-        buildValidator({ params: userIdParamSchema }),
+        buildValidator({ params: productIdParamSchema }),
         getProductById
     )
     .post(
-        verifyJWT,
+        // verifyJWT,
         buildValidator({
-            params: userIdParamSchema,
+            params: productIdParamSchema,
             body: updateProductSchema,
         }),
         updateProduct
     )
     .delete(
-        verifyJWT,
-        buildValidator({ params: userIdParamSchema }),
+        // verifyJWT,
+        buildValidator({ params: productIdParamSchema }),
         deleteProduct
     );
 

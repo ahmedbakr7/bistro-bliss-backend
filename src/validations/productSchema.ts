@@ -12,7 +12,7 @@ export type ProductQuery = {
     sortOrder: "asc" | "desc";
 };
 
-const name = Joi.string().trim().length(50);
+const name = Joi.string().trim();
 
 const description = Joi.string().max(255).trim();
 

@@ -9,7 +9,8 @@ export type UserQuery = {
     email?: string;
     phoneNumber?: string;
     imageUrl?: string;
-    name?: string;
+    // replaced `name` with `search` to support searching by name or email
+    search?: string;
 };
 
 // reusable pieces
@@ -23,6 +24,13 @@ export const name = Joi.string().trim().min(2).max(50).lowercase().messages({
 export const email = Joi.string().trim().email().lowercase().max(50).messages({
     "string.email": "Email must be a valid email address",
     "string.max": "Email must be at most {#limit} characters",
+});
+
+// new: generic search term to match names or emails containing the value
+export const search = Joi.string().trim().min(1).max(50).messages({
+    "string.base": "Search must be a string",
+    "string.min": "Search must be at least {#limit} character",
+    "string.max": "Search must be at most {#limit} characters",
 });
 
 // password policy (example: min 8, max 30, at least one upper, lower, digit, special)
@@ -124,7 +132,8 @@ export const userListQuerySchema = Joi.object({
     email: email.optional(),
     phoneNumber: phoneNumber.optional(),
     imageUrl: imageUrl.optional(),
-    name: name.optional(),
+    // replaced `name` filter with a generic `search` term
+    search: search.optional(),
 }).options({
     abortEarly: false,
     allowUnknown: false,

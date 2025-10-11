@@ -9,28 +9,33 @@ import path from "path";
 import fs from "fs";
 import { buildPublicUrl, safeUnlink } from "../middlewares/multer";
 import sequelize from "../util/database";
+import { Op, WhereOptions } from "sequelize";
 
 // @desc    Fetch all users
 // @route   GET /users
 // @access  Private
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-    const {
-        page,
-        limit,
-        sortBy,
-        sortOrder,
-        ...where
-    }: {
-        page: number;
-        limit: number;
-        sortBy: string;
-        sortOrder: string;
-    } = (req as any).validatedQuery as unknown as UserQuery;
+    const { page, limit, sortBy, sortOrder, search, ...filters }: any = (
+        req as any
+    ).validatedQuery as unknown as UserQuery & {
+        search?: string;
+        [key: string]: any;
+    };
 
     const offset = (page - 1) * limit;
 
+    // Build where clause; apply search across name OR email if provided
+    const whereClause: WhereOptions = { ...filters };
+    if (search && String(search).trim().length > 0) {
+        const term = `%${String(search).trim()}%`;
+        (whereClause as any)[Op.or] = [
+            { name: { [Op.iLike]: term } },
+            { email: { [Op.iLike]: term } },
+        ];
+    }
+
     const { count, rows } = await User.findAndCountAll({
-        where,
+        where: whereClause,
         limit,
         offset,
         order: [[sortBy, sortOrder]],
@@ -204,7 +209,7 @@ export const fileUpload = asyncHandler(async (req: Request, res: Response) => {
 
     res.status(200).json({
         message: "Image uploaded",
-        imageUrl: buildPublicUrl(user.imageUrl),
+        imageUrl: buildPublicUrl(user.imageUrl as string),
     });
 });
 
